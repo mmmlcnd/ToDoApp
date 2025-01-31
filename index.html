@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TODOアプリ</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    
+    <div class="maskContainer">
+        <div>
+            <img class="maskImg-backgroundGradation" src="images/palm.jpg" alt="">
+        </div>
+        <div class="taskContainer">
+                <h1>TODO</h1>
+                <div class="inputArea">
+                    <input type="text" id="taskInput" placeholder="タスクを入力">
+                    <button id="addButton">追加</button>
+                </div>
+                <ul id="taskList"></ul>
+        </div>
+    </div>
+
+  <script>
+    // DOM要素の取得
+    const taskInput = document.getElementById("taskInput");
+    const addButton = document.getElementById("addButton");
+    const taskList = document.getElementById("taskList");
+
+    // ローカルストレージからタスクを取得
+    function loadTasks(){
+        // JSON.parse(...) を使って文字列を元の配列の形に変換
+        // (ローカルストレージにはデータが文字列として保存されているため)
+        // || []:ローカルストレージに "tasks" が存在しない場合、null になるので、空の配列 [] を代わりに使用
+        const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+        // tasks 配列をループで処理
+        tasks.forEach((task) => {
+            // 各タスクをリストに追加
+            addTaskToList(task);
+        });
+    }
+
+    // タスクをローカルストレージに保存
+    function saveTasks() {
+        //タスクの内容を保存するための空の配列 tasks を作成
+        const tasks = [];
+        //taskList内のすべてのli要素を取得し、順番に処理
+        taskList.querySelectorAll("li").forEach((li) => {
+            //取得したタスクのテキストを配列 tasks に追加
+            tasks.push(li.querySelector(".taskText").textContent);
+        });
+        //JSON.stringify(tasks):配列 tasks をJSON形式（文字列）に変換
+        //ローカルストレージには文字列しか保存できないため
+        //localStorage.setItem("tasks", ...):ローカルストレージにデータを保存
+        //"tasks" はデータを識別するためのキー（名前）
+        localStorage.setItem("tasks", JSON.stringify(tasks));
+    }
+    
+    function addTaskToList(taskText) {
+        const li = document.createElement("li");
+        li.innerHTML = `
+            <span class="taskText">${taskText}</span>
+            <div class="buttonArea">
+                <button class="button completeButton">完了</button>
+                <button class="button editButton">編集</button>
+                <button class="button deleteButton">削除</button>
+            </div>
+        `;
+
+        const completeButton = li.querySelector(".completeButton");
+
+        completeButton.addEventListener("click", function(){
+            const taskTextElement = li.querySelector(".taskText");
+            taskTextElement.classList.toggle("completed");
+        });
+
+        const editButton = li.querySelector(".editButton");
+        
+        editButton.addEventListener("click", function(){
+            const taskTextElement = li.querySelector(".taskText");
+            const currentText = taskTextElement.textContent;
+
+            taskInput.value = currentText;
+
+            addButton.textContent = "更新";
+
+            // 一旦既存の "click" イベントリスナーをすべて解除
+            const newButton = addButton.cloneNode(true);
+            addButton.replaceWith(newButton);
+            
+            // 新しいリスナーを登録
+            newButton.addEventListener("click", function updateTask(){
+                const updatedText = taskInput.value.trim();
+                if (updatedText) {
+                    taskTextElement.textContent = updatedText;
+                    taskInput.value = "";
+                    addButton.textContent = "追加";
+
+                    // 保存処理
+                    saveTasks();
+
+                    // 再度リスナーを削除して元の状態に戻す
+                    newButton.replaceWith(addButton); 
+                } else {
+                    alert('タスクを入力してください');
+                }
+            });
+        });
+
+        const deleteButton = li.querySelector('.deleteButton');
+        deleteButton.addEventListener('click', function() {
+            taskList.removeChild(li);
+            saveTasks();
+        });
+
+        taskList.appendChild(li);
+    }
+
+    addButton.addEventListener("click", function(){
+        const taskText = taskInput.value.trim(); //両端の空白の削除
+
+        if(taskText){
+            addTaskToList(taskText);
+            taskInput.value = "";
+            saveTasks();
+        } else {
+            alert('タスクを入力してください');
+        }
+    });
+
+    window.addEventListener("DOMContentLoaded", loadTasks);
+
+  </script>
+
+</body>
+</html>
