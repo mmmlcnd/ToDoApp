@@ -58,7 +58,9 @@
     }
     
     function addTaskToList(taskText) {
+        //新しく <li> 要素を作成する（まだ HTML 上には表示されない）
         const li = document.createElement("li");
+        //li 要素の 中身（HTML）を設定する
         li.innerHTML = `
             <span class="taskText">${taskText}</span>
             <div class="buttonArea">
